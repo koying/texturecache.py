@@ -2826,7 +2826,7 @@ class MyJSONComms(object):
     else:
       return None
 
-  def removeLibraryItem(self, iType, libraryId):
+  def removeLibraryItem(self, iType, libraryId, delete):
     if iType and libraryId:
       # Use the secondary socket object to avoid consuming
       # notifications that are meant for the caller.
@@ -2838,8 +2838,7 @@ class MyJSONComms(object):
         (method, arg) = ("VideoLibrary.RemoveEpisode", "episodeid")
       elif iType == "musicvideo":
         (method, arg) = ("VideoLibrary.RemoveMusicVideo", "musicvideoid")
-
-    REQUEST = {"method": method, "params":{arg: libraryId}}
+    REQUEST = {"method": method, "params":{arg: libraryId, "deletefile": delete}}
     data = self.sendJSON(REQUEST, "libRemove", checkResult=True)
 
   def dumpJSON(self, data, decode=False, ensure_ascii=True):
@@ -6868,7 +6867,7 @@ def getAllFiles(keyFunction):
 
   return (afiles, mfiles)
 
-def removeMedia(mtype, libraryid):
+def removeMedia(mtype, libraryid, delete):
   MTYPE = {}
   MTYPE["movie"] = "Movie"
   MTYPE["musicvideo"] = "MusicVideo"
@@ -6888,7 +6887,7 @@ def removeMedia(mtype, libraryid):
 
   if title:
     gLogger.out("Removing %s %d [%s]... " % (mtype, libraryid, title))
-    jcomms.removeLibraryItem(mtype, libraryid)
+    jcomms.removeLibraryItem(mtype, libraryid, delete)
     gLogger.out("Done", newLine=True)
   else:
     gLogger.out("ERROR: does not exist - media type [%s] libraryid [%d]" % (mtype, libraryid), newLine=True)
@@ -8408,7 +8407,10 @@ def main(argv):
     pruneCache(remove_nonlibrary_artwork=True)
 
   elif argv[0] == "remove" and len(argv) == 3:
-    removeMedia(mtype=argv[1], libraryid=int(argv[2]))
+    removeMedia(mtype=argv[1], libraryid=int(argv[2]), delete=False)
+
+  elif argv[0] == "delete" and len(argv) == 3:
+    removeMedia(mtype=argv[1], libraryid=int(argv[2]), delete=True)
 
   elif argv[0] in ["purge", "purgetest"] and len(argv) >= 3:
     if argv[1] not in ["hashed", "unhashed", "all"]: usage(1)
